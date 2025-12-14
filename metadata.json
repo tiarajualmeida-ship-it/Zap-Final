@@ -1,0 +1,5 @@
+{
+  "name": "ZapTrix Task Manager",
+  "description": "Intelligently convert WhatsApp conversation logs into structured Bitrix24 tasks using Gemini AI.",
+  "requestFramePermissions": []
+}
