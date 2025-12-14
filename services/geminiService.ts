@@ -25,7 +25,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
   }
 
   // MUDANÇA AQUI: Usando o sufixo -latest para garantir que o modelo seja encontrado
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   const parts: any[] = [];
   
