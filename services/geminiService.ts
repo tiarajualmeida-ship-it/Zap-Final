@@ -24,7 +24,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
     throw new Error("⚠️ API Key não encontrada! Clique na engrenagem ⚙️ e configure.");
   }
 
-  // MUDANÇA AQUI: Usando o sufixo -latest para garantir que o modelo seja encontrado
+  // AQUI ESTÁ A CORREÇÃO: Usando o nome genérico que nunca muda
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   const parts: any[] = [];
