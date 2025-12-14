@@ -24,10 +24,9 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
     throw new Error("⚠️ API Key não encontrada! Clique na engrenagem ⚙️ e configure.");
   }
 
-  // URL direta da API (Funciona sempre, sem depender de biblioteca)
+  // MUDANÇA AQUI: Usando o sufixo -latest para garantir que o modelo seja encontrado
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-  // Monta as partes da mensagem
   const parts: any[] = [];
   
   if (text && text.trim()) {
@@ -70,7 +69,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
       body: JSON.stringify({
         contents: [{ parts }],
         generationConfig: {
-          responseMimeType: "application/json" // Força o Gemini a devolver JSON
+          responseMimeType: "application/json"
         }
       })
     });
@@ -81,15 +80,11 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
     }
 
     const data = await response.json();
-    
-    // Extrai o texto da resposta
     const jsonString = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!jsonString) throw new Error("A IA não retornou nenhuma tarefa.");
 
-    // Limpa se vier com blocos de código (ex: ```json ... ```)
     const cleanJson = jsonString.replace(/```json|```/g, '').trim();
-    
     const rawTasks = JSON.parse(cleanJson);
 
     return rawTasks.map((t: any) => ({
