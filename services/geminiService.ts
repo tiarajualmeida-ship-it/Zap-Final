@@ -25,7 +25,8 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
   }
 
   // AQUI ESTÁ A CORREÇÃO: Usando o nome genérico que nunca muda
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  // Mudamos de 'v1beta' para 'v1' e adicionamos '-001' para ser específico
+const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`;
 
   const parts: any[] = [];
   
