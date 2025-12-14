@@ -71,7 +71,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash", // Atualizado para versão mais estável/recente se disponível, ou mantenha 1.5-flash
+      model: "gemini-1.5-flash", // Atualizado para versão mais estável/recente se disponível, ou mantenha 1.5-flash
       contents: { parts },
       config: {
         systemInstruction: "Você é um gerente de projetos especialista e assistente pessoal. Sua função é ler conversas informais (texto ou imagens) e ouvir áudios para extrair tarefas estruturadas para o Bitrix24. Seja preciso na identificação de prazos e prioridades. Se houver áudio, transcreva mentalmente o conteúdo relevante para a descrição da tarefa.",
