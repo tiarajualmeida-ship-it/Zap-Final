@@ -25,7 +25,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
   }
 
   // URL direta da API (Funciona sempre, sem depender de biblioteca)
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
   // Monta as partes da mensagem
   const parts: any[] = [];
