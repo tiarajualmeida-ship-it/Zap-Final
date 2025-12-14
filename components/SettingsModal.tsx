@@ -1,106 +1,115 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle, HelpCircle } from 'lucide-react';
-import { BitrixConfig } from '../types';
+import { X, Save, Key, Globe, User } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  config: BitrixConfig;
-  onSave: (config: BitrixConfig) => void;
+  onSave: (config: any) => void;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, config, onSave }) => {
-  const [localConfig, setLocalConfig] = useState<BitrixConfig>(config);
+export default function SettingsModal({ isOpen, onClose, onSave }: SettingsModalProps) {
+  const [webhookUrl, setWebhookUrl] = useState('');
+  const [responsibleId, setResponsibleId] = useState('1');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
 
+  // Carrega as configurações salvas quando a janela abre
   useEffect(() => {
-    if (isOpen) {
-      setLocalConfig(config);
+    const savedConfig = localStorage.getItem('zapToBitrixConfig');
+    if (savedConfig) {
+      try {
+        const parsed = JSON.parse(savedConfig);
+        setWebhookUrl(parsed.webhookUrl || '');
+        setResponsibleId(parsed.defaultResponsibleId || '1');
+        // Carrega a chave se ela existir
+        setGeminiApiKey(parsed.geminiApiKey || '');
+      } catch (e) {
+        console.error("Erro ao carregar configurações", e);
+      }
     }
-  }, [isOpen, config]);
+  }, [isOpen]);
+
+  const handleSave = () => {
+    // Salva tudo no navegador
+    const config = {
+      webhookUrl,
+      defaultResponsibleId: responsibleId,
+      geminiApiKey
+    };
+    localStorage.setItem('zapToBitrixConfig', JSON.stringify(config));
+    
+    onSave(config);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 transform transition-all">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md border border-gray-100">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">Configuração Bitrix24</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X size={24} />
+          <h2 className="text-xl font-bold text-gray-800">Configurações do App</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
-
+        
         <div className="space-y-5">
+          {/* Campo da API Key do Gemini */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Webhook de Entrada (Inbound Webhook)
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <Key className="w-4 h-4 text-purple-600" />
+              Google Gemini API Key
             </label>
-            <input
-              type="text"
-              value={localConfig.webhookUrl}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, webhookUrl: e.target.value }))}
-              placeholder="https://b24-xxxx.bitrix24.com/rest/1/xxxx/"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-mono"
+            <input 
+              type="password" 
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+              placeholder="Cole sua chave AIza... aqui"
             />
-            
-            <div className="mt-3 bg-gray-50 p-3 rounded-lg border border-gray-100 text-xs text-gray-600 space-y-2">
-              <p className="font-semibold flex items-center gap-1">
-                <HelpCircle size={12} /> Como obter esta URL:
-              </p>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>No seu Bitrix24, vá para o menu lateral esquerdo e procure por <b>Developers (Desenvolvedores)</b>.</li>
-                <li>Selecione <b>Other (Outros)</b> &rarr; <b>Inbound Webhook (Webhook de entrada)</b>.</li>
-                <li>Em permissões de acesso, selecione <b>Tarefas (tasks)</b>.</li>
-                <li>Clique em salvar e copie a URL gerada (ex: <i>.../rest/1/token/</i>).</li>
-              </ol>
-            </div>
+            <p className="text-xs text-gray-500 mt-1">Necessário para a inteligência funcionar.</p>
           </div>
 
+          <div className="h-px bg-gray-200 my-2"></div>
+
+          {/* Campo do Webhook Bitrix */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <Globe className="w-4 h-4 text-blue-600" />
+              Webhook de Entrada (Bitrix24)
+            </label>
+            <input 
+              type="text" 
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              placeholder="https://b24-xxxx.bitrix24.com.br/rest/..."
+            />
+          </div>
+
+          {/* Campo do ID Responsável */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <User className="w-4 h-4 text-gray-600" />
               ID do Responsável Padrão
             </label>
-            <input
-              type="text"
-              value={localConfig.defaultResponsibleId}
-              onChange={(e) => setLocalConfig(prev => ({ ...prev, defaultResponsibleId: e.target.value }))}
-              placeholder="ex: 1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+            <input 
+              type="number" 
+              value={responsibleId}
+              onChange={(e) => setResponsibleId(e.target.value)}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 outline-none"
+              placeholder="Ex: 1"
             />
-            <p className="text-xs text-gray-400 mt-1">
-              O ID numérico do usuário no Bitrix (1 geralmente é o administrador).
-            </p>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-800">
-              Esses dados são salvos apenas no LocalStorage do seu navegador. Nenhuma informação é enviada para nossos servidores.
-            </p>
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => {
-              onSave(localConfig);
-              onClose();
-            }}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Save size={16} />
-            Salvar Configuração
-          </button>
-        </div>
+        <button 
+          onClick={handleSave}
+          className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-medium p-3 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-600/20"
+        >
+          <Save size={20} /> Salvar Tudo
+        </button>
       </div>
     </div>
   );
-};
-
-export default SettingsModal;
+}
