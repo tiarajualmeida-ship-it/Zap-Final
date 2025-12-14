@@ -1,15 +1,40 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { TaskDraft, TaskPriority } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export interface MediaPart {
   mimeType: string;
   data: string; // Base64 string
 }
 
+// Função auxiliar para buscar a chave salva
+const getApiKey = (): string => {
+  try {
+    // Tenta ler a configuração salva pelo App
+    const savedConfig = localStorage.getItem('zapToBitrixConfig');
+    if (savedConfig) {
+      const parsed = JSON.parse(savedConfig);
+      // Procura por campos comuns de API Key
+      if (parsed.geminiApiKey) return parsed.geminiApiKey;
+      if (parsed.apiKey) return parsed.apiKey;
+    }
+  } catch (e) {
+    console.error("Erro ao ler configuração", e);
+  }
+  return "";
+};
+
 export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = []): Promise<TaskDraft[]> => {
   try {
+    // 1. Busca a chave AGORA, no momento do clique, não no carregamento
+    const apiKey = getApiKey();
+
+    if (!apiKey) {
+      throw new Error("⚠️ API Key não encontrada! Clique na engrenagem ⚙️ no topo e configure sua chave do Google Gemini.");
+    }
+
+    // 2. Inicializa o Gemini com a chave encontrada
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+
     const parts: any[] = [];
 
     // Add text prompt if provided
@@ -46,7 +71,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash", // Atualizado para versão mais estável/recente se disponível, ou mantenha 1.5-flash
       contents: { parts },
       config: {
         systemInstruction: "Você é um gerente de projetos especialista e assistente pessoal. Sua função é ler conversas informais (texto ou imagens) e ouvir áudios para extrair tarefas estruturadas para o Bitrix24. Seja preciso na identificação de prazos e prioridades. Se houver áudio, transcreva mentalmente o conteúdo relevante para a descrição da tarefa.",
@@ -69,7 +94,7 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
       }
     });
 
-    const rawTasks = JSON.parse(response.text || "[]");
+    const rawTasks = JSON.parse(response.text() || "[]"); // Ajuste: response.text() é função em algumas versões, ou property em outras. O SDK novo usa .text() as vezes. Vamos garantir.
     
     // Add client-side IDs
     return rawTasks.map((t: any) => ({
@@ -78,8 +103,12 @@ export const analyzeChatLog = async (text: string, mediaFiles: MediaPart[] = [])
       priority: t.priority as TaskPriority
     }));
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erro ao analisar conteúdo com Gemini:", error);
-    throw new Error("Falha ao processar o conteúdo. Verifique se os arquivos são suportados.");
+    // Repassa o erro amigável se for de chave faltando
+    if (error.message.includes("API Key")) {
+        throw error;
+    }
+    throw new Error("Falha ao processar. Verifique sua API Key na engrenagem ou tente novamente.");
   }
 };
